@@ -102,17 +102,12 @@ After execution, the following files will be created inside the reports/ directo
 
 | ML Model Name        | Observation about Model Performance |
 |----------------------|------------------------------------|
-| Logistic Regression  | Good at identifying purchasing sessions (high recall 0.74), but predicts many false positives (precision 
-                        0.49). Linear model works reasonably well on this dataset. 
-| Decision Tree        | Balanced precision and recall (~0.52), but lower AUC (0.72) indicates weak ranking ability and possible 
-                         overfitting. 
-| kNN                  | High precision (0.71) but very low recall (0.30), meaning it predicts purchase correctly when it does,  |
-                         but misses many actual buyers.
-| Naive Bayes          | Extremely high recall (0.97) but very low precision (0.17) and poor accuracy (0.27); model predicts 
-                         almost all sessions as purchase due to strong independence assumption.
-| Random Forest        | Highest AUC (0.92) with good precision (0.77) and MCC (0.55); strong generalization and reliable ranking 
-                        of sessions.
-| XGBoost              | Balanced precision (0.60) and recall (0.67) with highest MCC (0.56) and high AUC (0.92); best overall 
-                         balanced performance considering class imbalance.
+| Logistic Regression  | Good at identifying purchasing sessions (high recall 0.74), but predicts many false positives (precision 0.49). Linear model works reasonably well on this dataset. |
+| Decision Tree        | Balanced precision and recall (~0.52), but lower AUC (0.72) indicates weak ranking ability and possible overfitting. |
+| kNN                  | High precision (0.71) but very low recall (0.30), meaning it predicts purchase correctly when it does, but misses many actual buyers. |
+| Naive Bayes          | Extremely high recall (0.97) but very low precision (0.17) and poor accuracy (0.27); model predicts almost all sessions as purchase due to strong independence assumption. |
+| Random Forest        | Highest AUC (0.92) with good precision (0.77) and MCC (0.55); strong generalization and reliable ranking of sessions. |
+| XGBoost              | Balanced precision (0.60) and recall (0.67) with highest MCC (0.56) and high AUC (0.92); best overall balanced performance considering class imbalance. |
+
 
 
