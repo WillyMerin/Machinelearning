@@ -1,51 +1,119 @@
 import streamlit as st
 import pandas as pd
-import altair.vegalite.v4.api as alt
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-# -------------------------------
-# Helper function to clean DataFrame
-# -------------------------------
-def clean_df_for_streamlit(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Convert object/Unicode columns to strings for Streamlit compatibility.
-    """
-    for col in df.columns:
-        if df[col].dtype == 'object':
-            df[col] = df[col].astype(str)
-    return df
-
-# -------------------------------
-# Sample Data (Replace with your data)
-# -------------------------------
-data = {
-    "Model": ["Logistic Regression", "Random Forest", "XGBoost"],
-    "Accuracy": [0.82, 0.88, 0.90],
-    "F1 Score": [0.80, 0.85, 0.88]
-}
-
-df = pd.DataFrame(data)
-df = clean_df_for_streamlit(df)
-
-# -------------------------------
-# Streamlit App
-# -------------------------------
-st.title("Evaluation Metrics Dashboard")
-
-st.subheader("Metrics Table")
-st.dataframe(df)
-
-st.subheader("Accuracy Chart")
-accuracy_chart = alt.Chart(df).mark_bar(color='steelblue').encode(
-    x='Model',
-    y='Accuracy',
-    tooltip=['Model', 'Accuracy', 'F1 Score']
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import (
+    confusion_matrix,
+    classification_report,
+    RocCurveDisplay,
+    roc_auc_score,
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    matthews_corrcoef
 )
-st.altair_chart(accuracy_chart, use_container_width=True)
 
-st.subheader("F1 Score Chart")
-f1_chart = alt.Chart(df).mark_line(point=True, color='orange').encode(
-    x='Model',
-    y='F1 Score',
-    tooltip=['Model', 'Accuracy', 'F1 Score']
+from src.train_ecommerce import build_preprocessor, build_models
+
+st.set_page_config(page_title="E-commerce Purchase Prediction", layout="wide")
+
+st.title("E-commerce Purchase Prediction")
+st.write("Upload dataset and evaluate ML classification models.")
+
+# 1. Dataset Upload
+uploaded_file = st.file_uploader("Upload CSV file", type="csv")
+
+test_size = st.slider("Test size (fraction)", 0.1, 0.5, 0.2)
+seed = st.number_input("Random seed", value=42, step=1)
+
+if uploaded_file is None:
+    st.info("Please upload a CSV file to proceed.")
+    st.stop()
+
+df = pd.read_csv(uploaded_file)
+
+st.subheader("Dataset Preview")
+st.dataframe(df.head())
+
+# Prepare data
+X, y, preprocessor = build_preprocessor(df)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=test_size,
+    stratify=y,
+    random_state=seed
 )
-st.altair_chart(f1_chart, use_container_width=True)
+
+# Calculate pos_weight for imbalance (for XGBoost)
+pos = (y_train == 1).sum()
+neg = (y_train == 0).sum()
+pos_weight = neg / max(pos, 1)
+
+models = build_models(pos_weight)
+
+# 2. Model Selection Dropdown
+selected_model_name = st.selectbox(
+    "Select Model to Train & Evaluate",
+    list(models.keys())
+)
+
+if st.button("Train Selected Model"):
+    model = models[selected_model_name]
+
+    pipe = Pipeline([
+        ('preprocessor', preprocessor),
+        ('classifier', model)
+    ])
+
+    st.write("Training model...")
+    pipe.fit(X_train, y_train)
+
+    y_pred = pipe.predict(X_test)
+
+    # Probabilities for AUC if available
+    if hasattr(pipe.named_steps['classifier'], "predict_proba"):
+        y_proba = pipe.predict_proba(X_test)[:, 1]
+        auc = roc_auc_score(y_test, y_proba)
+    else:
+        auc = None
+
+    # 3. Display Evaluation Metrics
+    metrics = {
+        "Accuracy": accuracy_score(y_test, y_pred),
+        "Precision": precision_score(y_test, y_pred, zero_division=0),
+        "Recall": recall_score(y_test, y_pred, zero_division=0),
+        "F1 Score": f1_score(y_test, y_pred, zero_division=0),
+        "MCC": matthews_corrcoef(y_test, y_pred),
+        "AUC": auc
+    }
+
+    st.subheader("Evaluation Metrics")
+    st.table(pd.DataFrame(metrics.items(), columns=["Metric", "Value"]))
+
+    # 4. Confusion Matrix
+    st.subheader("Confusion Matrix")
+    cm = confusion_matrix(y_test, y_pred)
+    fig, ax = plt.subplots()
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax)
+    ax.set_xlabel("Predicted")
+    ax.set_ylabel("Actual")
+    ax.set_title(f"{selected_model_name} - Confusion Matrix")
+    st.pyplot(fig)
+
+    # Classification Report
+    st.subheader("Classification Report")
+    st.text(classification_report(y_test, y_pred))
+
+    # ROC Curve
+    if auc is not None:
+        st.subheader("ROC Curve")
+        fig2, ax2 = plt.subplots()
+        RocCurveDisplay.from_predictions(y_test, y_proba, ax=ax2)
+        ax2.set_title(f"{selected_model_name} - ROC Curve")
+        st.pyplot(fig2)
