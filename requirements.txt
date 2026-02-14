@@ -1,6 +1,6 @@
 streamlit==1.19.0
 altair==4.2.2
-numpy==1.24.2
+numpy>=1.26.0
 pandas==3.0.0
 scikit-learn==1.8.0
 matplotlib==3.10.8
