@@ -1,0 +1,10 @@
+# Core
+pandas
+numpy
+scikit-learn
+xgboost
+# Viz
+matplotlib
+seaborn
+
+streamlit
