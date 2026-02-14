@@ -27,7 +27,7 @@ ML_ASSIGNMENT/
 ├── reports/
 │   ├── metrics_summary.csv     # Model evaluation metrics
 │   └── roc_curves.png          # ROC curve visualization
-│
+│__runtime.txt
 ├── src/
 │   ├── __init__.py
 │   ├── train_ecommerce.py      # Model training pipeline
@@ -37,25 +37,9 @@ ML_ASSIGNMENT/
 ├── online_shoppers_intention.csv  # Dataset
 ├── requirements.txt            # Dependencies
 └── README.md
+
                     
 
-```
-
-##  Getting the Data
-1. Download the dataset from the UCI page above. You can also find mirrors (e.g., Kaggle) that provide `online_shoppers_intention.csv`.
-2. Save the CSV as: `online_shoppers_intention.csv`
-
-> **Note**: The UCI page documents the dataset (target: `Revenue`, features such as `BounceRates`, `ExitRates`, `PageValues`, `Month`, `VisitorType`, etc.). No missing values are reported on UCI.
-
-##  How to Run
-```bash
-# (optional) create venv
-python -m venv .venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
-
-pip install -r requirements.txt
-
-# run
-python src/train_ecommerce.py --data_csv online_shoppers_intention.csv --test_size 0.2 --seed 42
 ```
 
 ## Outputs:
@@ -78,12 +62,6 @@ After execution, the following files will be created inside the reports/ directo
 - Recall
 - F1-score
 - Matthews Correlation Coefficient (MCC)
-
-##  Notes on Preprocessing
-- Train/test split with stratification
-- Numeric features scaled with `StandardScaler`
-- Categorical features encoded with `OneHotEncoder`
-- Handles class imbalance via `class_weight='balanced'` (LR/DT/RF) and `scale_pos_weight` (XGBoost)
 
 
 ## Model Comparison Table
